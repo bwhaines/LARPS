@@ -1,0 +1,16 @@
+[package]
+name = "larps"
+version = "0.0.1"
+authors = ["Brett Haines <brett@hainescoding.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+regex = "1"
+
+[dependencies.async-std]
+version = "1.9"
+features = ["attributes"]
+
+[dependencies.simple_logger]
+version = "1.11"
