@@ -56,7 +56,8 @@ fn parse_port_list(port_string : &str) -> Vec<u16> {
 
     // Range -- match to two groups of 1-5 digits separated by two '.' chars or a '-'
     if Regex::new(r"^\d{1,5}(\.\.|-)\d{1,5}$").unwrap().is_match(port_string) {
-        let bounds : Vec<u16> = port_string.split("..").map(|x| x.parse::<u16>().unwrap()).collect();
+        let delim = Regex::new(r"\.\.|-").unwrap();
+        let bounds : Vec<u16> = delim.split(port_string).map(|x| x.parse::<u16>().unwrap()).collect();
         return (bounds[0]..bounds[1]).collect::<Vec<u16>>();
     }
 
