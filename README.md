@@ -36,5 +36,4 @@ All done -- 0 seconds elapsed
 ## To-do List
 
 * Scan using partial TCP handshake or UDP connection
-* Take in file with list of domains or IP addresses
 * Output active ports to file

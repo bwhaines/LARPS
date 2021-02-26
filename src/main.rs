@@ -1,6 +1,8 @@
 use async_std::io::timeout;
 use async_std::net::TcpStream;
 use regex::Regex;
+use std::fs::OpenOptions;
+use std::io::{BufRead,BufReader,ErrorKind};
 use std::time::{Duration,SystemTime};
 use simple_logger::SimpleLogger;
 
@@ -15,16 +17,16 @@ async fn main() {
     // Set up default options
     let mut quiet_mode : bool = false;
     let mut timeout : u64 = 10;
-    let mut target_addr : &str = "127.0.0.1";
+    let mut target_addrs : Vec<String> = Vec::new();
     let mut port_list : Vec<u16> = (0..u16::MAX).map(|x| x+1).collect();
 
     // Parse user args
     let args: Vec<String> = std::env::args().collect();
     for index in 0..args.len() {
         match args[index].as_str() {
-            "-a" | "--address" => target_addr = args[index + 1].as_str(),
-            "-p" | "--ports"   => port_list = parse_port_list(args[index + 1].as_str()),
-            "-f" | "--infile"  => println!("-f is not supported yet!"),
+            "-a" | "--address" => target_addrs.push(args[index + 1].clone()),
+            "-p" | "--ports"   => port_list = parse_port_list(&args[index + 1]),
+            "-f" | "--infile"  => parse_addr_list(&args[index + 1], &mut target_addrs),
             "-o" | "--outfile" => println!("-o is not supported yet!"),
             "-m" | "--mode"    => println!("-m is not supported yet!"),
             "-q" | "--quiet"   => quiet_mode = true,
@@ -35,10 +37,33 @@ async fn main() {
         }
     }
 
-    scan_addr(target_addr, port_list, timeout).await;
+    scan_addr(target_addrs[0].as_str(), port_list, timeout).await;
 
     if !quiet_mode {
         println!("All done -- {} seconds elapsed", start_time.elapsed().unwrap().as_secs());
+    }
+}
+
+
+// Read a list of addresses from a file
+fn parse_addr_list(filename : &String, addr_list : &mut Vec<String>) {
+
+    log::info!("Reading addresses from file at {}", filename);
+
+    // Try to open the file for reading
+    let file = match OpenOptions::new().read(true).open(filename) {
+        Ok(file) => file,
+        Err(e) => match e.kind() {
+            ErrorKind::NotFound => panic!("Could not find file at {}", filename),
+            ErrorKind::PermissionDenied => panic!("You don't have permission to read {}", filename),
+            _ => panic!("An unknown file error occurred"),
+        },
+    };
+
+    // Push each line from file into addr_list vector
+    for addr in BufReader::new(file).lines() {
+        log::info!("Adding {:?} to address list", &addr);
+        addr_list.push(addr.unwrap());
     }
 }
 
