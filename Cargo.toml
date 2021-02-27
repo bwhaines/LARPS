@@ -1,6 +1,6 @@
 [package]
 name = "larps"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Brett Haines <brett@hainescoding.com>"]
 edition = "2018"
 
