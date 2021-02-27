@@ -41,7 +41,7 @@ async fn main() {
     }
 
     // Fill the FuturesUnordered list with scan_addr calls
-    let mut futures = target_addrs.iter().map(|target| scan_addr(target, &port_list, timeout)).collect::<FuturesUnordered<_>>();
+    let mut futures = target_addrs.iter().map(|target| scan_addr(target, port_list[0], timeout)).collect::<FuturesUnordered<_>>();
 
     // Run through list of scan_addr calls in the FuturesUnordered
     while let Some(_) = futures.next().await { }
@@ -100,19 +100,15 @@ fn parse_port_list(port_string : &str) -> Vec<u16> {
 
 
 // Scan a given list of ports on a given address
-async fn scan_addr(address : &str, port_list : &Vec<u16>, timeout_value : u64) {
+async fn scan_addr(address : &str, port : u16, timeout_value : u64) {
 
-    log::info!("Starting scan on ports {:?}", port_list);
+    log::info!("Starting scan on {} port {}", address, port);
 
-    // For each port, try a connection
-    for port_num in port_list {
-        log::trace!("Scanning port {}", port_num);
-        async move {
-            let stream = TcpStream::connect((address, port_num.clone()));
-            if let Ok(_) = timeout(
-                Duration::from_secs(timeout_value),
-                stream
-            ).await { println!("{}:{}", address, port_num); }
-        }.await;
-    }
+    async move {
+        let stream = TcpStream::connect((address, port));
+        if let Ok(_) = timeout(
+            Duration::from_secs(timeout_value),
+            stream
+        ).await { println!("{}:{}", address, port); }
+    }.await;
 }
