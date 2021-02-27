@@ -5,6 +5,7 @@ authors = ["Brett Haines <brett@hainescoding.com>"]
 edition = "2018"
 
 [dependencies]
+futures = "0.3"
 log = "0.4"
 regex = "1"
 

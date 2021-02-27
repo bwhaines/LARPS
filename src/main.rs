@@ -1,11 +1,14 @@
 use async_std::io::timeout;
 use async_std::net::TcpStream;
+use async_std::stream::StreamExt;
+use futures::stream::FuturesUnordered;
 use regex::Regex;
 use std::fs::OpenOptions;
 use std::io::{BufRead,BufReader,ErrorKind};
 use std::time::{Duration,SystemTime};
 use simple_logger::SimpleLogger;
 
+extern crate futures;
 extern crate log;
 
 #[async_std::main]
@@ -37,7 +40,11 @@ async fn main() {
         }
     }
 
-    scan_addr(target_addrs[0].as_str(), port_list, timeout).await;
+    // Fill the FuturesUnordered list with scan_addr calls
+    let mut futures = target_addrs.iter().map(|target| scan_addr(target, &port_list, timeout)).collect::<FuturesUnordered<_>>();
+
+    // Run through list of scan_addr calls in the FuturesUnordered
+    while let Some(_) = futures.next().await { }
 
     if !quiet_mode {
         println!("All done -- {} seconds elapsed", start_time.elapsed().unwrap().as_secs());
@@ -93,7 +100,7 @@ fn parse_port_list(port_string : &str) -> Vec<u16> {
 
 
 // Scan a given list of ports on a given address
-async fn scan_addr(address : &str, port_list : Vec<u16>, timeout_value : u64) {
+async fn scan_addr(address : &str, port_list : &Vec<u16>, timeout_value : u64) {
 
     log::info!("Starting scan on ports {:?}", port_list);
 
@@ -101,7 +108,7 @@ async fn scan_addr(address : &str, port_list : Vec<u16>, timeout_value : u64) {
     for port_num in port_list {
         log::trace!("Scanning port {}", port_num);
         async move {
-            let stream = TcpStream::connect((address, port_num));
+            let stream = TcpStream::connect((address, port_num.clone()));
             if let Ok(_) = timeout(
                 Duration::from_secs(timeout_value),
                 stream
