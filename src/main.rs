@@ -21,7 +21,7 @@ async fn main() {
     let mut quiet_mode: bool = false;
     let mut timeout: u64 = 10;
     let mut target_addrs: Vec<String> = Vec::new();
-    let mut port_list: Vec<u16> = (0..u16::MAX).map(|x| x+1).collect();
+    let mut port_list: Vec<u16> = (1..=u16::MAX).collect();
 
     // Parse user args
     let args: Vec<String> = std::env::args().collect();
@@ -107,7 +107,7 @@ fn parse_port_list(port_string: &str) -> Vec<u16> {
 
     // Else default to all ports
     println!("Couldn't understand port list...");
-    return (0..u16::MAX).map(|x| x+1).collect::<Vec<u16>>();
+    return (1..=u16::MAX).collect::<Vec<u16>>();
 }
 
 
